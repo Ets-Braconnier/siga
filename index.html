@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>siga — Galerie</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    function sendHeight() {
+      const h = Math.max(
+        document.body ? document.body.scrollHeight : 0,
+        document.documentElement ? document.documentElement.scrollHeight : 0
+      );
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: "resize", height: h }, "*");
+      }
+    }
+
+    function sendHeightSoon() {
+      requestAnimationFrame(() => {
+        sendHeight();
+        setTimeout(sendHeight, 150);
+        setTimeout(sendHeight, 600);
+      });
+    }
+
+    window.addEventListener("load", sendHeightSoon);
+    window.addEventListener("resize", sendHeightSoon);
+
+    const PRODUCTS = {
+      siga: [
+        { name: "Fentrim 2 50-85 A", slug: "fentrim-2-50-85-a", image: "galerie/Fentrim_2_50-85_A.png", pdf: "pdf/SIGA_Fentrim_2_fiche_produit_Belgique_PDS_fr.pdf" },
+        { name: "Fentrim 2 100mm A", slug: "fentrim-2-100mm-a", image: "galerie/Fentrim_2_100mm_A.png", pdf: "pdf/SIGA_Fentrim_2_fiche_produit_Belgique_PDS_fr.pdf" },
+        { name: "Fentrim 2 150mm A", slug: "fentrim-2-150mm-a", image: "galerie/Fentrim_2_150mm_A.png", pdf: "pdf/SIGA_Fentrim_2_fiche_produit_Belgique_PDS_fr.pdf" },
+        { name: "Fentrim 2 200mm A", slug: "fentrim-2-200mm-a", image: "galerie/Fentrim_2_200mm_A.png", pdf: "pdf/SIGA_Fentrim_2_fiche_produit_Belgique_PDS_fr.pdf" },
+
+        { name: "Fentrim 20 150mm A", slug: "fentrim-20-150mm-a", image: "galerie/Fentrim_20_150mm_A.png", pdf: "pdf/SIGA_Fentrim_20_fiche_produit_PDS_fr.pdf" },
+        { name: "Fentrim 20 200mm A", slug: "fentrim-20-200mm-a", image: "galerie/Fentrim_20_200mm_A.png", pdf: "pdf/SIGA_Fentrim_20_fiche_produit_PDS_fr.pdf" },
+
+        { name: "Fentrim 330 Grey 150mm", slug: "fentrim-330-grey-150", image: "galerie/Fentrim_330_Grey_150mm_A.png", pdf: "pdf/SIGA_Fentrim_330_grey_fiche_produit_PDS_fr.pdf" },
+        { name: "Fentrim 330 Grey 200mm", slug: "fentrim-330-grey-200", image: "galerie/Fentrim_330_Grey_200mm_A.png", pdf: "pdf/SIGA_Fentrim_330_grey_fiche_produit_PDS_fr.pdf" },
+        { name: "Fentrim 330 Grey 300mm", slug: "fentrim-330-grey-300", image: "galerie/Fentrim_330_Grey_300mm_A.png", pdf: "pdf/SIGA_Fentrim_330_grey_fiche_produit_PDS_fr.pdf" },
+
+        { name: "Fentrim IS 2 75mm A", slug: "fentrim-is-2-75mm-a", image: "galerie/Fentrim_IS_2_75mm_A.png", pdf: "pdf/SIGA_Fentrim_IS_2_fiche_produit_Belgique_PDS_fr.pdf" },
+        { name: "Fentrim IS 2 100mm A", slug: "fentrim-is-2-100mm-a", image: "galerie/Fentrim_IS_2_100mm_A.png", pdf: "pdf/SIGA_Fentrim_IS_2_fiche_produit_Belgique_PDS_fr.pdf" },
+        { name: "Fentrim IS 2 150mm A", slug: "fentrim-is-2-150mm-a", image: "galerie/Fentrim_IS_2_150mm_A.png", pdf: "pdf/SIGA_Fentrim_IS_2_fiche_produit_Belgique_PDS_fr.pdf" },
+        { name: "Fentrim IS 2 200mm A", slug: "fentrim-is-2-200mm-a", image: "galerie/Fentrim_IS_2_200mm_A.png", pdf: "pdf/SIGA_Fentrim_IS_2_fiche_produit_Belgique_PDS_fr.pdf" },
+        { name: "Fentrim IS 2 250mm A", slug: "fentrim-is-2-250mm-a", image: "galerie/Fentrim_IS_2_250mm_A.png", pdf: "pdf/SIGA_Fentrim_IS_2_fiche_produit_Belgique_PDS_fr.pdf" },
+
+        { name: "Fentrim IS 20 100mm A", slug: "fentrim-is-20-100mm-a", image: "galerie/Fentrim_IS_20_100mm_A.png", pdf: "pdf/SIGA_Fentrim_IS_20_fiche_produit_PDS_fr.pdf" },
+        { name: "Fentrim IS 20 200mm A", slug: "fentrim-is-20-200mm-a", image: "galerie/Fentrim_IS_20_200mm_A.png", pdf: "pdf/SIGA_Fentrim_IS_20_fiche_produit_PDS_fr.pdf" },
+        { name: "Fentrim IS 20 250mm A", slug: "fentrim-is-20-250mm-a", image: "galerie/Fentrim_IS_20_250mm_A.png", pdf: "pdf/SIGA_Fentrim_IS_20_fiche_produit_PDS_fr.pdf" },
+        { name: "Fentrim IS 20 300mm A", slug: "fentrim-is-20-300mm-a", image: "galerie/Fentrim_IS_20_300mm_A.png", pdf: "pdf/SIGA_Fentrim_IS_20_fiche_produit_PDS_fr.pdf" },
+
+        { name: "Rissan 60 B", slug: "rissan-60-b", image: "galerie/Rissan_60_B.png", pdf: "pdf/SIGA_Rissan_fiche_produit_PDS_fr.pdf" },
+        { name: "Rissan 100 B", slug: "rissan-100-b", image: "galerie/Rissan_100_B.png", pdf: "pdf/SIGA_Rissan_fiche_produit_PDS_fr.pdf" },
+        { name: "Rissan 150 B", slug: "rissan-150-b", image: "galerie/SIGA_Rissan_150mm_packshot_B_2.png", pdf: "pdf/SIGA_Rissan_fiche_produit_PDS_fr.pdf" },
+
+        { name: "Rissan 430 Grey 150mm", slug: "rissan-430-grey-150", image: "galerie/SIGA_Rissan_430_grey_packshot_B_150mm.png", pdf: "pdf/SIGA_Rissan_430_grey_fiche_produit_PDS_fr.pdf" },
+        { name: "Rissan 430 Grey 230mm", slug: "rissan-430-grey-230", image: "galerie/SIGA_Rissan_430_grey_packshot_B_230mm.png", pdf: "pdf/SIGA_Rissan_430_grey_fiche_produit_PDS_fr.pdf" },
+
+        { name: "Sicrall 60 B", slug: "sicrall-60-b", image: "galerie/Sicrall_60_B.png", pdf: "pdf/SIGA_Sicrall_fiche_produit_PDS_fr.pdf" },
+        { name: "Sicrall 170 A", slug: "sicrall-170-a", image: "galerie/Sicrall_170_A.png", pdf: "pdf/SIGA_Sicrall_fiche_produit_PDS_fr.pdf" },
+
+        { name: "Wigluv 60", slug: "wigluv-60", image: "galerie/SIGA_Wigluv_60_500x500.png", pdf: "pdf/SIGA_Wigluv_fiche_produit_PDS_fr.pdf" },
+        { name: "Wigluv 100", slug: "wigluv-100", image: "galerie/SIGA_Wigluv_100_500x500.png", pdf: "pdf/SIGA_Wigluv_fiche_produit_PDS_fr.pdf" },
+        { name: "Wigluv 150", slug: "wigluv-150", image: "galerie/SIGA_Wigluv_150_500x500.png", pdf: "pdf/SIGA_Wigluv_fiche_produit_PDS_fr.pdf" },
+        { name: "Wigluv 300", slug: "wigluv-300", image: "galerie/Wigluv_300_B.png", pdf: "pdf/SIGA_Wigluv_fiche_produit_PDS_fr.pdf" },
+
+        { name: "Wigluv Black 60", slug: "wigluv-black-60", image: "galerie/SIGA_Wigluv_black_60mm_packshot_A_7509-6040.png", pdf: "pdf/SIGA_Wigluv_black_fiche_produit_PDS_fr.pdf" },
+        { name: "Wigluv Black 20-40", slug: "wigluv-black-20-40", image: "galerie/SIGA_Wigluv_black_20-40_packshot_A_7509-6025.png", pdf: "pdf/SIGA_Wigluv_black_fiche_produit_PDS_fr.pdf" },
+
+        { name: "Twinet 20 A", slug: "twinet-20-a", image: "galerie/Twinet_20_A.png", pdf: "pdf/SIGA_Twinet_fiche_produit_PDS_fr.pdf" },
+        { name: "Twinet 40 A", slug: "twinet-40-a", image: "galerie/Twinet_40_A.png", pdf: "pdf/SIGA_Twinet_fiche_produit_PDS_fr.pdf" },
+
+        { name: "Corvum 12-48 A", slug: "corvum-12-48-a", image: "galerie/Corvum_12-48_A.png", pdf: "pdf/SIGA_Corvum_fiche_produit_PDS_fr.pdf" },
+        { name: "Corvum 30-30 A", slug: "corvum-30-30-a", image: "galerie/Corvum_30-30_A.png", pdf: "pdf/SIGA_Corvum_fiche_produit_PDS_fr.pdf" }
+      ]
+    };
+
+    const CAT_SIZES = {
+      "siga": ["m²"]
+    };
+
+    const CATEGORY_UI = [
+      {
+        id: "siga",
+        label: "siga",
+        thumb: "vignettes-boutons/siga.png"
+      }
+    ];
+
+    const CAT_GROUPS = [
+      { id: "siga", label: "", cats: ["siga"] }
+    ];
+
+    const PRICE_MANIFEST_URL = "prix/manifest.json";
+    let PRICE_MAP = Object.create(null);
+    let STOCK_MAP = Object.create(null);
+    let SIZES_BY_PATH = Object.create(null);
+
+    const app = document.getElementById("app");
+    const catButtons = document.getElementById("catButtons");
+    const catSelect = document.getElementById("catSelect");
+
+    function normalizeSize(s) {
+      return String(s || "").trim();
+    }
+
+    function slugify(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/['’]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function getKey(path, taille) {
+      return `${path}|${normalizeSize(taille)}`;
+    }
+
+    function stockLabelFor(key) {
+      const v = Number(STOCK_MAP[key]);
+      return (v > 0) ? "✅ En stock" : "⚠️ Rupture";
+    }
+
+    function getPathCandidates(cat, product) {
+      const name = typeof product === "string" ? product : (product?.name || "");
+      const slug = typeof product === "string" ? slugify(product) : (product?.slug || slugify(product?.name || ""));
+
+      return Array.from(new Set([
+        `${cat}/${name}`,
+        `${cat}/${slug}`
+      ].filter(Boolean)));
+    }
+
+    function getPrimaryPath(cat, product) {
+      return getPathCandidates(cat, product)[1] || getPathCandidates(cat, product)[0] || cat;
+    }
+
+    function getAvailablePath(cat, product) {
+      const candidates = getPathCandidates(cat, product);
+      for (const pathKey of candidates) {
+        if (SIZES_BY_PATH[pathKey] || Object.keys(PRICE_MAP).some(k => k.startsWith(pathKey + "|"))) {
+          return pathKey;
+        }
+      }
+      return candidates[0] || `${cat}/${typeof product === "string" ? product : product?.name || "produit"}`;
+    }
+
+    function getSizeOptions(cat, product) {
+      const pathKey = product.image;
+      const excelSizes = SIZES_BY_PATH[pathKey];
+      if (Array.isArray(excelSizes) && excelSizes.length) return excelSizes;
+      return CAT_SIZES[cat] || [""];
+    }
+
+    function getStoredSize(key, fallback) {
+      try {
+        const v = localStorage.getItem("size:" + key);
+        return v ? v : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function setStoredSize(key, val) {
+      try {
+        localStorage.setItem("size:" + key, val);
+      } catch { }
+    }
+
+    function pickInitialSize(pathKey, options) {
+      const stored = getStoredSize(pathKey, "");
+      if (stored && options.includes(stored)) {
+        const ks = getKey(pathKey, stored);
+        const vs = Number(STOCK_MAP[ks]);
+        if (vs > 0) return stored;
+      }
+
+      for (const opt of options) {
+        const k = getKey(pathKey, opt);
+        const v = Number(STOCK_MAP[k]);
+        if (v > 0) return opt;
+      }
+
+      return options[0] || "";
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} sur ${url}`);
+      return res.json();
+    }
+
+    async function fetchXlsxAsPriceMap(xlsxUrl) {
+      const res = await fetch(xlsxUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} sur ${xlsxUrl}`);
+
+      const buf = await res.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      if (!ws) throw new Error(`Feuille Excel introuvable dans ${xlsxUrl}`);
+
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
+
+      const map = Object.create(null);
+      const stock = Object.create(null);
+
+      for (const r of rows) {
+        let path = String(r.path || r.Path || r.PATH || "").trim();
+        const taille = normalizeSize(r.taille ?? r.Taille ?? r.TAILLE ?? "");
+        let price = r.prix_tvac ?? r.Prix_TVAC ?? r.PRIX_TVAC ?? r.prix ?? r.Prix ?? "";
+
+        let stockRaw = r.disponible ?? r.Disponible ?? r.DISPO ?? r.dispo ?? r.stock ?? r.Stock ?? "";
+
+        let stockVal = String(stockRaw).trim() === ""
+          ? 0
+          : Number(String(stockRaw).replace(",", "."));
+
+        if (!Number.isFinite(stockVal)) stockVal = 0;
+        if (!path) continue;
+
+        path = path.replaceAll("\\", "/").replace(/^\.?\//, "");
+
+        if (typeof price === "string") price = price.replace(",", ".").trim();
+        const num = Number(price);
+
+        if (Number.isFinite(num)) {
+          const k = getKey(path, taille);
+          map[k] = num;
+          stock[k] = stockVal;
+        }
+      }
+
+      return { map, stock };
+    }
+
+    function buildSizesByPath(priceMap) {
+      const idx = Object.create(null);
+
+      for (const k of Object.keys(priceMap)) {
+        const sep = k.indexOf("|");
+        if (sep === -1) continue;
+
+        const pathKey = k.slice(0, sep);
+        const taille = normalizeSize(k.slice(sep + 1));
+
+        if (!pathKey || !taille) continue;
+        (idx[pathKey] ||= []).push(taille);
+      }
+
+      const collator = new Intl.Collator("fr", { numeric: true, sensitivity: "base" });
+
+      for (const p of Object.keys(idx)) {
+        const unique = Array.from(new Set(idx[p]));
+        idx[p] = unique.sort((a, b) => collator.compare(String(a), String(b)));
+      }
+
+      return idx;
+    }
+
+    async function loadPricesFromFolder() {
+      try {
+        const files = await fetchJson(PRICE_MANIFEST_URL);
+        if (!Array.isArray(files) || files.length === 0) {
+          throw new Error("manifest vide ou invalide");
+        }
+
+        const merged = Object.create(null);
+        const mergedStock = Object.create(null);
+
+        for (const fname of files) {
+          const url = `prix/${fname}`;
+          try {
+            const { map, stock } = await fetchXlsxAsPriceMap(url);
+            for (const k of Object.keys(map)) merged[k] = map[k];
+            for (const k of Object.keys(stock)) mergedStock[k] = stock[k];
+          } catch (e) {
+            console.warn("Fichier prix ignoré :", url, e);
+          }
+        }
+
+        PRICE_MAP = merged;
+        STOCK_MAP = mergedStock;
+        SIZES_BY_PATH = buildSizesByPath(PRICE_MAP);
+      } catch (e) {
+        PRICE_MAP = Object.create(null);
+        STOCK_MAP = Object.create(null);
+        SIZES_BY_PATH = Object.create(null);
+        console.warn("Prix non chargés :", e);
+      }
+    }
+
+    function formatPrice(v) {
+      if (!Number.isFinite(v)) return "";
+      return (Math.round(v * 100) / 100).toFixed(2);
+    }
+
+    function getProductPrice(pathKey, size) {
+      return PRICE_MAP[getKey(pathKey, size)];
+    }
+
+    function getProductStock(pathKey, size) {
+      return stockLabelFor(getKey(pathKey, size));
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    const categories = CATEGORY_UI.filter(c => PRODUCTS[c.id]);
+    let activeCat = categories[0]?.id || "__none__";
+
+    function buildCatButtons() {
+      const catById = Object.fromEntries(categories.map(c => [c.id, c]));
+
+      const mkBtn = (c) => `
+        <button class="catBtn ${c.id === activeCat ? 'active' : ''}" data-cat="${c.id}" type="button">
+          ${c.thumb ? `<span class="catBtnThumb"><img src="${c.thumb}" alt="${escapeHtml(c.label)}"></span>` : ""}
+          <span class="catBtnLabel">${c.label}</span>
+        </button>
+      `;
+
+      catButtons.innerHTML = CAT_GROUPS.map(g => {
+        const list = g.cats.map(id => catById[id]).filter(Boolean);
+        if (!list.length) return "";
+
+        return `
+          <div class="catGroup" data-group="${g.id}">
+            <div class="catGroupTitle">${g.label}</div>
+            <div class="catGroupRow">
+              ${list.map(mkBtn).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      catButtons.querySelectorAll("button[data-cat]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeCat = btn.dataset.cat;
+          syncCategoryUI();
+          render();
+        });
+      });
+    }
+
+    function buildCatSelect() {
+      const catById = Object.fromEntries(categories.map(c => [c.id, c]));
+
+      catSelect.innerHTML = CAT_GROUPS.map(g => {
+        const list = g.cats.map(id => catById[id]).filter(Boolean);
+        if (!list.length) return "";
+
+        return `
+          <optgroup label="${g.label}">
+            ${list.map(c => `<option value="${c.id}">${c.label}</option>`).join("")}
+          </optgroup>
+        `;
+      }).join("");
+
+      catSelect.addEventListener("change", () => {
+        activeCat = catSelect.value;
+        syncCategoryUI();
+        render();
+      });
+    }
+
+    function syncCategoryUI() {
+      if (catSelect) catSelect.value = activeCat;
+
+      document.querySelectorAll("#catButtons .catBtn").forEach(b => {
+        b.classList.toggle("active", b.dataset.cat === activeCat);
+      });
+    }
+
+    function renderPriceMarkup(price) {
+      if (price === undefined) {
+        return `
+          <div class="price-label">Tvac</div>
+          <div class="price-amount muted">—</div>
+        `;
+      }
+
+      const [intPart, decPart = "00"] = formatPrice(price).split(".");
+      return `
+        <div class="price-label">Tvac</div>
+        <div class="price-amount">
+          <span class="int">${intPart}</span>
+          <span class="dec">${decPart}</span>
+          <span class="eur">€</span>
+        </div>
+      `;
+    }
+
+    function render() {
+      const cat = activeCat;
+
+      if (!cat || !PRODUCTS[cat]) {
+        app.innerHTML = `<p class="muted">Aucune catégorie à afficher.</p>`;
+        sendHeightSoon();
+        return;
+      }
+
+      const products = PRODUCTS[cat] || [];
+      if (!products.length) {
+        app.innerHTML = `<p class="muted">Aucun produit à afficher.</p>`;
+        sendHeightSoon();
+        return;
+      }
+
+      let html = `<div class="grid">`;
+
+      for (const product of products) {
+        const pathKey = product.image;
+        const storageKey = product.image;
+        const options = getSizeOptions(cat, product);
+        const currentSize = pickInitialSize(pathKey, options);
+        setStoredSize(storageKey, currentSize);
+
+        const price = getProductPrice(pathKey, currentSize);
+        const stockText = getProductStock(pathKey, currentSize);
+
+        const safeId = btoa(unescape(encodeURIComponent(storageKey))).replace(/=+/g, "");
+        const selectId = "s_" + safeId;
+        const stockId = "st_" + safeId;
+        const priceId = "pr_" + safeId;
+
+        const openTag = product.pdf
+          ? `<a href="${product.pdf}" target="_blank" rel="noopener" class="productLink">`
+          : `<div class="productLink">`;
+
+        const closeTag = product.pdf ? `</a>` : `</div>`;
+
+        html += `
+  <figure class="productCard">
+    ${openTag}
+      <div class="productVisual">
+        <img
+          src="${product.image}"
+          alt="${escapeHtml(product.name)}"
+          loading="lazy"
+          onerror="this.closest('figure').classList.add('no-image'); this.remove();"
+        >
+      </div>
+
+      <figcaption>${product.name}</figcaption>
+    ${closeTag}
+
+    <div class="stock" id="${stockId}">${stockText}</div>
+
+    <div class="size">
+      <select id="${selectId}" data-path="${pathKey}" data-storage-key="${storageKey}" data-stock-id="${stockId}" data-price-id="${priceId}">
+        ${options.map(o => `<option value="${o}" ${o === currentSize ? 'selected' : ''}>${o}</option>`).join("")}
+      </select>
+    </div>
+
+    <div class="price" id="${priceId}">${renderPriceMarkup(price)}</div>
+  </figure>
+`;
+      }
+
+      html += `</div>`;
+      app.innerHTML = html;
+      sendHeightSoon();
+
+      document.querySelectorAll('select[data-path]').forEach(sel => {
+        sel.addEventListener("change", () => {
+          const pathKey = sel.dataset.path;
+          const storageKey = sel.dataset.storageKey || pathKey;
+          const taille = normalizeSize(sel.value);
+          setStoredSize(storageKey, taille);
+
+          const price = getProductPrice(pathKey, taille);
+          const stockId = sel.dataset.stockId;
+          const priceId = sel.dataset.priceId;
+
+          const priceBox = document.getElementById(priceId);
+          if (priceBox) priceBox.innerHTML = renderPriceMarkup(price);
+
+          const st = document.getElementById(stockId);
+          if (st) st.textContent = getProductStock(pathKey, taille);
+
+          sendHeightSoon();
+        });
+      });
+    }
+
+    (async function init() {
+      try {
+        await loadPricesFromFolder();
+        render();
+      } catch (e) {
+        console.error("Init error:", e);
+        app.innerHTML = `<p class="missing">❌ Erreur JavaScript : ${String(e && e.message ? e.message : e)}</p>`;
+      }
+    })();
+  </script>
+</body>
+
+</html>
