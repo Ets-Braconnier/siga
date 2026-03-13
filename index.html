@@ -10,6 +10,10 @@
 
 <body>
 
+  <header class="top">
+    <div id="subCatButtons" class="subCatButtons"></div>
+  </header>
+
   <div id="app"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -77,8 +81,8 @@
         { name: "Corvum 12-48 A", slug: "corvum-12-48-a", image: "galerie/Corvum_12-48_A.png", pdf: "pdf/SIGA_Corvum_fiche_produit_PDS_fr.pdf" },
         { name: "Corvum 30-30 A", slug: "corvum-30-30-a", image: "galerie/Corvum_30-30_A.png", pdf: "pdf/SIGA_Corvum_fiche_produit_PDS_fr.pdf" },
 
-        { name: "Primur cartouche B", slug: "primur-cartouche-b", image: "galerie/Primur_cartridge_B.png", pdf: "pdf/SIGA_Primur_cartouche_boudin_fiche_produit_PDS_fr.pdf" },
         { name: "Primur rouleau A", slug: "primur-rouleau-a", image: "galerie/Primur_Rolle_A.png", pdf: "pdf/SIGA_Primur_rouleau_fiche_produit_PDS_fr.pdf" },
+        { name: "Primur cartouche B", slug: "primur-cartouche-b", image: "galerie/Primur_cartridge_B.png", pdf: "pdf/SIGA_Primur_cartouche_boudin_fiche_produit_PDS_fr.pdf" },
         { name: "Primur tubular bag A", slug: "primur-tubular-bag-a", image: "galerie/Primur_tubular_bag_A.png", pdf: "pdf/SIGA_Primur_cartouche_boudin_fiche_produit_PDS_fr.pdf" },
 
         { name: "Dockskin 1kg", slug: "dockskin-1kg", image: "galerie/SIGA_Dockskin_1kg_packshot_A_5930.png", pdf: "pdf/SIGA_Dockskin_100_fiche_produit_PDS_fr.pdf" },
@@ -102,14 +106,64 @@
       { id: "siga", label: "", cats: ["siga"] }
     ];
 
+    const SUB_CATEGORIES = [
+      {
+        id: "bandes",
+        label: "Bandes adhésives",
+        thumb: "vignettes-boutons/bandes-adhesives.png"
+      },
+      {
+        id: "colles",
+        label: "Colle, mastic & primaire",
+        thumb: "vignettes-boutons/colles-mastic-primaire.png"
+      }
+    ];
+
+    const PRODUCT_SUBCAT = {
+      "fentrim-2-50-85-a": "bandes",
+      "fentrim-2-100mm-a": "bandes",
+      "fentrim-2-150mm-a": "bandes",
+      "fentrim-2-200mm-a": "bandes",
+      "fentrim-20-150mm-a": "bandes",
+      "fentrim-20-200mm-a": "bandes",
+      "fentrim-is-2-75mm-a": "bandes",
+      "fentrim-is-2-100mm-a": "bandes",
+      "fentrim-is-2-150mm-a": "bandes",
+      "fentrim-is-2-200mm-a": "bandes",
+      "fentrim-is-2-250mm-a": "bandes",
+      "fentrim-is-20-100mm-a": "bandes",
+      "fentrim-is-20-200mm-a": "bandes",
+      "fentrim-is-20-250mm-a": "bandes",
+      "fentrim-is-20-300mm-a": "bandes",
+      "rissan-60-b": "bandes",
+      "rissan-100-b": "bandes",
+      "rissan-150-b": "bandes",
+      "farmer": "bandes",
+      "sicrall-60-b": "bandes",
+      "sicrall-170-a": "bandes",
+      "wigluv-60": "bandes",
+      "wigluv-100": "bandes",
+      "wigluv-150": "bandes",
+      "wigluv-black-60": "bandes",
+      "twinet-20-a": "bandes",
+      "corvum-12-48-a": "bandes",
+      "corvum-30-30-a": "bandes",
+
+      "primur-rouleau-a": "colles",
+      "primur-cartouche-b": "colles",
+      "primur-tubular-bag-a": "colles",
+      "dockskin-1kg": "colles"
+    };
+
+    let activeSubCategory = "bandes";
+
     const PRICE_MANIFEST_URL = "prix/manifest.json";
     let PRICE_MAP = Object.create(null);
     let STOCK_MAP = Object.create(null);
     let SIZES_BY_PATH = Object.create(null);
 
     const app = document.getElementById("app");
-    const catButtons = document.getElementById("catButtons");
-    const catSelect = document.getElementById("catSelect");
+    const subCatButtons = document.getElementById("subCatButtons");
 
     function normalizeSize(s) {
       return String(s || "").trim();
@@ -327,65 +381,27 @@
     const categories = CATEGORY_UI.filter(c => PRODUCTS[c.id]);
     let activeCat = categories[0]?.id || "__none__";
 
-    function buildCatButtons() {
-      const catById = Object.fromEntries(categories.map(c => [c.id, c]));
+    function buildSubCatButtons() {
+      if (!subCatButtons) return;
 
-      const mkBtn = (c) => `
-        <button class="catBtn ${c.id === activeCat ? 'active' : ''}" data-cat="${c.id}" type="button">
-          ${c.thumb ? `<span class="catBtnThumb"><img src="${c.thumb}" alt="${escapeHtml(c.label)}"></span>` : ""}
-          <span class="catBtnLabel">${c.label}</span>
-        </button>
-      `;
+      subCatButtons.innerHTML = `
+    <div class="catGroup" data-group="subcats">
+      <div class="catGroupRow">
+        ${SUB_CATEGORIES.map(sc => `
+          <button class="catBtn ${sc.id === activeSubCategory ? "active" : ""}" data-subcat="${sc.id}" type="button" aria-label="${escapeHtml(sc.label)}">
+            ${sc.thumb ? `<span class="catBtnThumb"><img src="${sc.thumb}" alt="${escapeHtml(sc.label)}"></span>` : ""}
+          </button>
+        `).join("")}
+      </div>
+    </div>
+  `;
 
-      catButtons.innerHTML = CAT_GROUPS.map(g => {
-        const list = g.cats.map(id => catById[id]).filter(Boolean);
-        if (!list.length) return "";
-
-        return `
-          <div class="catGroup" data-group="${g.id}">
-            <div class="catGroupTitle">${g.label}</div>
-            <div class="catGroupRow">
-              ${list.map(mkBtn).join("")}
-            </div>
-          </div>
-        `;
-      }).join("");
-
-      catButtons.querySelectorAll("button[data-cat]").forEach(btn => {
+      subCatButtons.querySelectorAll("button[data-subcat]").forEach(btn => {
         btn.addEventListener("click", () => {
-          activeCat = btn.dataset.cat;
-          syncCategoryUI();
+          activeSubCategory = btn.dataset.subcat;
+          buildSubCatButtons();
           render();
         });
-      });
-    }
-
-    function buildCatSelect() {
-      const catById = Object.fromEntries(categories.map(c => [c.id, c]));
-
-      catSelect.innerHTML = CAT_GROUPS.map(g => {
-        const list = g.cats.map(id => catById[id]).filter(Boolean);
-        if (!list.length) return "";
-
-        return `
-          <optgroup label="${g.label}">
-            ${list.map(c => `<option value="${c.id}">${c.label}</option>`).join("")}
-          </optgroup>
-        `;
-      }).join("");
-
-      catSelect.addEventListener("change", () => {
-        activeCat = catSelect.value;
-        syncCategoryUI();
-        render();
-      });
-    }
-
-    function syncCategoryUI() {
-      if (catSelect) catSelect.value = activeCat;
-
-      document.querySelectorAll("#catButtons .catBtn").forEach(b => {
-        b.classList.toggle("active", b.dataset.cat === activeCat);
       });
     }
 
@@ -417,7 +433,8 @@
         return;
       }
 
-      const products = PRODUCTS[cat] || [];
+      const allProducts = PRODUCTS[cat] || [];
+      const products = allProducts.filter(product => PRODUCT_SUBCAT[product.slug] === activeSubCategory);
       if (!products.length) {
         app.innerHTML = `<p class="muted">Aucun produit à afficher.</p>`;
         sendHeightSoon();
@@ -504,6 +521,7 @@
     (async function init() {
       try {
         await loadPricesFromFolder();
+        buildSubCatButtons();
         render();
       } catch (e) {
         console.error("Init error:", e);
